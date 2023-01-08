@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import classes from "./UpdatePage.module.css";
 import Modal from "react-modal";
@@ -22,7 +22,11 @@ export default function UpdatePage() {
   const [modalIsOpen, setIsOpen] = useState(false);
   const [superPowerName, setSuperPowerName] = useState("");
   const [superPowerDesc, setSuperPowerDesc] = useState("");
-  const [temp, setTemp] = useState(true);
+  const [newName, setNewName] = useState("");
+  const [newDesc, setNewDesc] = useState("");
+  const [newHeight, setNewHeight] = useState("");
+  const [newPictureUrl, setNewPictureUrl] = useState('');
+  const navigate = useNavigate();
 
   function openModal() {
     setIsOpen(true);
@@ -45,6 +49,7 @@ export default function UpdatePage() {
                   id
                   name
                   description
+                  height
                   pictureUrl
                   superpowers{
                     id
@@ -62,9 +67,13 @@ export default function UpdatePage() {
       .then((e) => {
         setData(e.data.superheroes[0]);
         setLoading(false);
+        setNewName(e.data.superheroes[0].name);
+        setNewDesc(e.data.superheroes[0].description);
+        setNewHeight(e.data.superheroes[0].height);
+        setNewPictureUrl(e.data.superheroes[0].pictureUrl);
       })
       .catch((e) => console.log(e));
-  }, [temp]);
+  }, []);
 
   const deletePower = (id) => {
     const requestOption = {
@@ -87,12 +96,12 @@ export default function UpdatePage() {
         return e.json();
       })
       .then((e) => {
-        setData(prev => {
-            return {
-                ...prev,
-                superpowers: prev.superpowers.filter(e => e.id !== id)
-            }
-        })
+        setData((prev) => {
+          return {
+            ...prev,
+            superpowers: prev.superpowers.filter((e) => e.id !== id),
+          };
+        });
       })
       .catch((e) => console.log(e));
   };
@@ -117,7 +126,7 @@ export default function UpdatePage() {
               superPower
               superheroId
             }
-          }`
+          }`,
       }),
     };
     fetch("https://localhost:7085/graphql/", requestOption)
@@ -126,19 +135,54 @@ export default function UpdatePage() {
       })
       .then((e) => {
         let newPower = e.data.addSuperpower;
-        setData(prev => {
-            return {
-                ...prev,
-                superpowers: [...prev.superpowers, newPower]
-            }
-        })
+        setData((prev) => {
+          return {
+            ...prev,
+            superpowers: [...prev.superpowers, newPower],
+          };
+        });
       })
       .catch((e) => console.log(e));
     closeModal();
     setLoading(false);
   };
 
-  //   console.log(data);
+  const updateHendler = () => {
+    setLoading(true);
+    const requestOption = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query: `mutation{
+          updateSuperhero (input: {
+            id: ${data.id},
+            name: "${newName}",
+            description: "${newDesc}",
+            height: "${newHeight}",
+            pictureUrl: "${newPictureUrl}"
+          }) {
+            id
+            name
+            description
+            height
+            pictureUrl
+          }
+        }`,
+      }),
+    };
+    fetch("https://localhost:7085/graphql/", requestOption)
+      .then((e) => {
+        return e.json();
+      })
+      .then((e) => {
+        setLoading(false);
+        navigate("/", { replace: true });
+      })
+      .catch((e) => console.log(e));
+  };
+
   return (
     <>
       <Modal
@@ -186,6 +230,9 @@ export default function UpdatePage() {
             id="naslov"
             placeholder={data.name}
             className={classes.title}
+            onChange={(e) => {
+              setNewName(e.target.value);
+            }}
           />
           <div className={classes.container}>
             <div className={classes.imgHolder}>
@@ -196,20 +243,22 @@ export default function UpdatePage() {
               />
               <div className={classes.link}>
                 <label htmlFor="link">ENTER NEW LINK</label>
-                <input type="text" id="link" />
+                <input type="text" id="link" onChange={(e) => {
+                  setNewPictureUrl(e.target.value);
+                }} />
               </div>
             </div>
             <div className={classes.description}>
-              <textarea className={classes.area}>{data.description}</textarea>
+              <textarea className={classes.area} onChange={e => {
+                setNewDesc(e.target.value);
+              }}>{data.description}</textarea>
               <div className={classes.powerHolder}>
                 <h3>Powers:</h3>
                 {data.superpowers.map((power) => {
                   return (
                     <div className={classes.power}>
                       <h4>{power.superPower}:</h4>
-                      <p>
-                        {power.description} {power.id}
-                      </p>
+                      <p>{power.description}</p>
                       <button
                         className={classes.deletePower}
                         onClick={(e) => deletePower(power.id)}
@@ -225,6 +274,9 @@ export default function UpdatePage() {
               </div>
             </div>
           </div>
+          <button className={classes.updateButton} onClick={updateHendler}>
+            UPDATE SUPEHERO
+          </button>
         </div>
       )}
     </>

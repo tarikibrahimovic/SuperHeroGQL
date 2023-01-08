@@ -13,22 +13,51 @@ const customStyles = {
   },
 };
 
+export default function DeleteButton({ id, setData, setDisplayedData }) {
+  const [modalIsOpen, setIsOpen] = useState(false);
 
-export default function DeleteButton({ id }) {
-    const [modalIsOpen, setIsOpen] = useState(false);
+  function openModal() {
+    setIsOpen(true);
+  }
 
-    function openModal() {
-      setIsOpen(true);
-    }
-    
-    function closeModal() {
-      setIsOpen(false);
-    }
-    
-    function deleteItem() {
-      console.log("delete");
-      closeModal()
-    }
+  function closeModal() {
+    setIsOpen(false);
+  }
+
+  function deleteItem() {
+    const requestOptions = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query: `mutation{
+            deleteSuperhero (input: {
+              id: ${id}
+            }){
+              id
+              name
+              description
+            }
+          }`,
+      }),
+    };
+    fetch("https://localhost:7085/graphql/", requestOptions)
+      .then((e) => {
+        return e.json();
+      })
+      .catch((e) => console.log(e));
+
+    setData((prev) => {
+      return prev.filter((e) => e.id !== id);
+    });
+
+    setDisplayedData((prev) => {
+      return prev.filter((e) => e.id !== id);
+    });
+
+    closeModal();
+  }
 
   return (
     <>

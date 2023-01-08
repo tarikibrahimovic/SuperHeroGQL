@@ -1,0 +1,25 @@
+.searchBar{
+    width: 100%;
+    margin: 30px 0;
+}
+
+.searchInput{
+    width: 40%;
+    height: 40px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 0 10px;
+    font-size: 16px;
+}
+
+.searchButton{
+    width: 10%;
+    height: 40px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 0 10px;
+    font-size: 16px;
+    background-color: blue;
+    color: white;
+    cursor: pointer;
+}
